@@ -34,8 +34,10 @@ public class PlayerController : InputManager
         if (Input.GetKeyDown(JumpKey) && IsGround() && !_allowJump)
         {
             _allowJump = true;
+            _playerRb.velocity = Vector2.zero;
             Vector2 jumpAmount = Vector2.up * _jumpForce * 100 * Time.deltaTime;
             _playerRb.velocity = jumpAmount;
+            Invoke(nameof(AllowJump), 0.8f);
         }
     }
     private bool IsGround()
@@ -43,13 +45,14 @@ public class PlayerController : InputManager
         RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, -Vector2.up, _groundRay + _playerHeight, _layerMasks);
         if (hitInfo.collider != null)
         {
-            Invoke(nameof(AllowJump) , 0.5f);
             return true;
         }
         return false;
     }
-    private void AllowJump(){
+    private void AllowJump()
+    {
         _allowJump = false;
+        Debug.Log("Allow Jump");
     }
     private void OnDrawGizmos()
     {
