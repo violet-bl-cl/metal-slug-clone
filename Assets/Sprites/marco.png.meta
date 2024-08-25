@@ -136,7 +136,7 @@ TextureImporter:
         serializedVersion: 2
         x: 3
         y: 504
-        width: 50
+        width: 37
         height: 37
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -157,7 +157,7 @@ TextureImporter:
         serializedVersion: 2
         x: 55
         y: 504
-        width: 51
+        width: 36
         height: 37
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1543,7 +1543,7 @@ TextureImporter:
         serializedVersion: 2
         x: 282
         y: 369
-        width: 29
+        width: 27
         height: 37
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1562,9 +1562,9 @@ TextureImporter:
       name: marco_69
       rect:
         serializedVersion: 2
-        x: 309
+        x: 310
         y: 369
-        width: 29
+        width: 27
         height: 36
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1583,9 +1583,9 @@ TextureImporter:
       name: marco_70
       rect:
         serializedVersion: 2
-        x: 338
+        x: 339
         y: 369
-        width: 30
+        width: 27
         height: 37
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1604,9 +1604,9 @@ TextureImporter:
       name: marco_71
       rect:
         serializedVersion: 2
-        x: 367
+        x: 368
         y: 369
-        width: 32
+        width: 31
         height: 37
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -2213,10 +2213,10 @@ TextureImporter:
       name: marco_100
       rect:
         serializedVersion: 2
-        x: 212
-        y: 34
-        width: 84
-        height: 68
+        x: 265
+        y: 61
+        width: 31
+        height: 41
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -2236,8 +2236,8 @@ TextureImporter:
         serializedVersion: 2
         x: 298
         y: 60
-        width: 29
-        height: 33
+        width: 30
+        height: 42
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -2247,27 +2247,6 @@ TextureImporter:
       bones: []
       spriteID: cf6f6ab2724705905a3cd314e3831eed
       internalID: 1470968956
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: marco_102
-      rect:
-        serializedVersion: 2
-        x: 307
-        y: 91
-        width: 9
-        height: 7
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 8042ce2ce31879842a14a17e735bde03
-      internalID: 178956539
       vertices: []
       indices: 
       edges: []
@@ -4444,7 +4423,7 @@ TextureImporter:
         width: 27
         height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -4460,12 +4439,12 @@ TextureImporter:
       name: marco_207
       rect:
         serializedVersion: 2
-        x: 267
+        x: 265
         y: 559
-        width: 28
+        width: 30
         height: 39
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -4486,7 +4465,7 @@ TextureImporter:
         width: 32
         height: 39
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -4504,10 +4483,10 @@ TextureImporter:
         serializedVersion: 2
         x: 330
         y: 562
-        width: 38
+        width: 35
         height: 37
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -4528,7 +4507,7 @@ TextureImporter:
         width: 31
         height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

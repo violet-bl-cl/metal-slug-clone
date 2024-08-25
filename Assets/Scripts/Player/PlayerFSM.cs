@@ -1,0 +1,30 @@
+public enum PlayerFSM {
+    //top
+    TopIdle,
+    TopMoveRight,
+    TopJumpRight,
+    TopAimUp,
+    TopAimDown,
+    TopShootUp,
+    TopShootRight,
+    TopShootDown,
+    //bot
+    BotMoveLeft,
+    BotMoveRight,
+    BotIdle,
+    BotLookUp,
+    BotCrouch,
+    BotCrouchMove,
+    BotJumpIdle,
+    BotJumpLeft,
+    BotJumpRight,
+    BotJumpLandLeft,
+    BotJumpLandRight,
+    //Full
+    FullCrouch,
+    FullCrouchMove,
+    FullCrouchStart,
+    FullCrouchShoot,
+    //Sepcial
+    FullSpawn,    
+}
