@@ -63,7 +63,7 @@ public class PlayerController : InputManager
     private bool _isShoot;
     private bool _isAnyDirectionKeyPressed, _isAnyDirectionKeyNotPressed;
     private float _horizontal;
-
+    private Vector3 _capusleSize;
     private TextMeshPro _debugSlopeText;
     void Awake()
     {
@@ -76,7 +76,7 @@ public class PlayerController : InputManager
     }
     void Start()
     {
-        _playerHeight = _playerCapsule.size.y / 2;
+        _capusleSize = new Vector3(0,_playerCapsule.size.y / 2);
     }
     void Update()
     {
@@ -84,7 +84,7 @@ public class PlayerController : InputManager
         _isLeftPressed = !transform.CheckBoxSide(Vector2.left, _sideBoxDistance, _sideBoxSize, _groundLayerMask) && Input.GetKey(MoveLeft);
         _isRightPressed = !transform.CheckBoxSide(Vector2.right, _sideBoxDistance, _sideBoxSize, _groundLayerMask) && Input.GetKey(MoveRight);
         _isGround = transform.CheckCircleSide(Vector2.down, _bottomGroundRadius, _bottomGroundDistnace, _groundLayerMask);
-        _isSlope = CheckSphereSlope(-Vector2.up, _bottomGroundRadius, _bottomGroundDistnace, _groundLayerMask);
+        _isSlope = OnSlope(-Vector2.up, _bottomGroundRadius, _bottomGroundDistnace, _groundLayerMask);
         _isCrouch = Input.GetKey(MoveDown);
         _isLookUp = Input.GetKey(MoveUp);
         _isAnyDirectionKeyNotPressed = Input.GetKeyUp(MoveLeft) || Input.GetKeyUp(MoveRight);
@@ -98,7 +98,6 @@ public class PlayerController : InputManager
         bool offGroundIdleLookDown = _isAnyDirectionKeyNotPressed && !_isGround && _isCrouch;
         bool onGroundCrouchMove = _isAnyDirectionKeyPressed && _isGround && _isCrouch;
         bool onGroundCrouchIdle = _isAnyDirectionKeyNotPressed && _isGround && _isCrouch;
-
         Action startInputAction = () =>
                   {
                       _allowInput = true;
@@ -115,30 +114,29 @@ public class PlayerController : InputManager
             {
                 StopCoroutine(_jumpCoroutine);
                 _jumpCoroutine = null;
-                //  _playerCapsule.isTrigger = false;
             };
             _jumpCoroutine = StartCoroutine(DelayAction(_jumpDelayTime, null, endAction));
             Vector2 jumpAmount = Vector2.up * _jumpForce * _forceAmount * Time.fixedDeltaTime;
             _playerRb.velocity = jumpAmount;
-
-            //_playerCapsule.isTrigger = true;
         }
         if (!_isCrouch && _allowInput && (!_isLookUp || _isLookUp))
         {
             endInputAction();
         }
+
         // slope condiition.
         if (_isAnyDirectionKeyNotPressed && _isSlope)
         {
             Debug.Log("OnSlope And Not Pressed");
-            _playerRb.gravityScale = 0.0f;
+            UseGravity(false);
             _playerRb.velocity = Vector2.zero;
         }
         else if (_isAnyDirectionKeyPressed && _isSlope)
         {
             Debug.Log("OnSlope and Pressed");
-            _playerRb.gravityScale = 0.0f;
+            UseGravity(true);
         }
+        // Ground condition.
         else if (_isAnyDirectionKeyNotPressed && _isGround)
         {
             Debug.Log("OnGround and not pressed");
@@ -147,8 +145,10 @@ public class PlayerController : InputManager
         else if (_isAnyDirectionKeyNotPressed)
         {
             Debug.Log("Not pressed");
-            _playerRb.gravityScale = _gravityScale;
+            UseGravity(true);
         }
+
+        // Shooting Mechanics.
 
         if (onGroundMove && _isShoot && _isLookUp)
         {
@@ -209,35 +209,15 @@ public class PlayerController : InputManager
         // when the key has been pressed and on ground, on slope.
         else if (_isAnyDirectionKeyPressed && _isGround && _isSlope)
         {
-            float inputX = _horizontal * _movementSpeed * 1.1f * Time.fixedDeltaTime;
-            Vector2 slopePosition = GetSlopePosition(Vector2.down, _bottomGroundDistnace, _groundLayerMask);
-            Vector2 movePosition = new Vector2()
-            {
-                x = inputX + transform.localPosition.x,
-                y = slopePosition.y
-            };
-            //  _playerRb.MovePosition(movePosition);
+            float inputX = _horizontal * _movementSpeed * _forceAmount * Time.fixedDeltaTime;
+            Vector2 movePosition = new Vector2();
+            movePosition.Set( _slopePerpendicular.x * -inputX,  _slopePerpendicular.y * -inputX);
             _debugSlopeText.color = Color.green;
-            _debugSlopeText.text = "Slope: " + slopePosition + "\n" + "Player Pos" + transform.localPosition;
-            transform.localPosition = movePosition;
-            
-            // Vector2 slopeDirection = new Vector2(_horizontal * _forceAmount * _movementSpeed * -_slopePerpendicular.x, -_slopePerpendicular.y * _movementSpeed);
-            // Vector2 movePosition = new Vector2(slopeDirection.x * Time.fixedDeltaTime, _playerRb.velocity.y);
-            // _playerRb.velocity = movePosition;
+            _debugSlopeText.text = "Slope: " + movePosition + "\n" + "Player Pos" + transform.localPosition;
+            _playerRb.velocity = movePosition;
         }
-
-
-
-        //Vector2 fullPosiition = _isLeftPressed ? new Vector2(0.34f, -1.0f) : new Vector2(-0.34f, -1.0f);
-        //Vector2 topPosition = _isLeftPressed ? new Vector2(0.34f, 0.6f) : new Vector2(-0.34f, 0.6f);
-        //Vector2 botPosition = _isLeftPressed ? new Vector2(0.35f, -0.3f) : new Vector2(-0.35f, -0.3f);
-        //
-        //SpriteHelper.ChangeSpritePosition(_playerFullAction.gameObject, _isLeftPressed, fullPosiition);
-        //SpriteHelper.ChangeSpritePosition(_playerTopAction.gameObject, _isLeftPressed, topPosition);
-        //SpriteHelper.ChangeSpritePosition(_playerBotAction.gameObject, _isLeftPressed, botPosition);
-
-        if (_isLeftPressed) _direction = Direction.Left;
-        else if (_isRightPressed) _direction = Direction.Right;
+        if (_horizontal > 0.1f) _direction = Direction.Left;
+        else if (_horizontal < -0.1f) _direction = Direction.Right;
 
         _playerFullAction.gameObject.SetActive(_isCrouch && _isGround);
         _playerBotAction.gameObject.SetActive(!_isCrouch || (_isCrouch && !_isGround));
@@ -275,19 +255,24 @@ public class PlayerController : InputManager
         Vector3 slopePlayerPosition = transform.localPosition;
         if (hitInfo.collider != null)
         {
-            slopePlayerPosition.y = hitInfo.point.y;
+          //  slopePlayerPosition.y = hitInfo.point.y;
+        Vector2 slopeNormal = hitInfo.normal;
+         slopePlayerPosition = new Vector2(slopeNormal.x, -slopeNormal.y).normalized;
             Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
         }
         return slopePlayerPosition;
     }
-    private bool CheckSphereSlope(Vector2 direction, float radius, float distance, LayerMask layerMask)
+    private void UseGravity(bool isActive){
+        _playerRb.gravityScale = isActive ? _gravityScale : 0.0f;
+    }
+    private bool OnSlope(Vector2 direction, float radius, float distance, LayerMask layerMask)
     {
         RaycastHit2D hitInfo = Physics2D.CircleCast(transform.position, radius, direction, distance, layerMask);
         if (hitInfo.collider != null)
         {
             _slopePerpendicular = Vector2.Perpendicular(hitInfo.normal).normalized;
             float angle = Vector2.Angle(hitInfo.normal, direction);
-            //Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.red);
+            Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.blue);
             Debug.DrawRay(hitInfo.point, _slopePerpendicular, Color.cyan);
             return angle != 0 && angle < _slopeMax;
         }
