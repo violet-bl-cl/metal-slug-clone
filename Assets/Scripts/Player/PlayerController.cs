@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : InputManager
 {
@@ -39,6 +41,8 @@ public class PlayerController : InputManager
     private bool _allowShoot = false;
     private float _inputDelayTime = 0.8f;
     private float _shootDelayTime = 0.05f;
+    [SerializeField]
+    private float _gravityScale = 0.0f;
     private CapsuleCollider2D _playerCapsule;
     private float _playerHeight;
     private Rigidbody2D _playerRb;
@@ -59,13 +63,19 @@ public class PlayerController : InputManager
     private bool _isShoot;
     private bool _isAnyDirectionKeyPressed, _isAnyDirectionKeyNotPressed;
     private float _horizontal;
-    void Start()
+
+    private TextMeshPro _debugSlopeText;
+    void Awake()
     {
         _playerRb = GetComponent<Rigidbody2D>();
         _playerCapsule = GetComponent<CapsuleCollider2D>();
         _playerFullAction = transform.GetComponentInChildren<PlayerFullAction>(true);
         _playerBotAction = transform.GetComponentInChildren<PlayerBottomAction>(true);
         _playerTopAction = transform.GetComponentInChildren<PlayerTopAction>(true);
+        _debugSlopeText = GetComponentInChildren<TextMeshPro>(true);
+    }
+    void Start()
+    {
         _playerHeight = _playerCapsule.size.y / 2;
     }
     void Update()
@@ -77,7 +87,7 @@ public class PlayerController : InputManager
         _isSlope = CheckSphereSlope(-Vector2.up, _bottomGroundRadius, _bottomGroundDistnace, _groundLayerMask);
         _isCrouch = Input.GetKey(MoveDown);
         _isLookUp = Input.GetKey(MoveUp);
-        _isAnyDirectionKeyNotPressed = !_isLeftPressed || !_isRightPressed;
+        _isAnyDirectionKeyNotPressed = Input.GetKeyUp(MoveLeft) || Input.GetKeyUp(MoveRight);
         _isAnyDirectionKeyPressed = _isLeftPressed || _isRightPressed;
         _movementSpeed = (_isCrouch && _isGround) ? _crouchSpeed : _walkSpeed;
 
@@ -105,17 +115,39 @@ public class PlayerController : InputManager
             {
                 StopCoroutine(_jumpCoroutine);
                 _jumpCoroutine = null;
-                _playerCapsule.isTrigger = false;
+                //  _playerCapsule.isTrigger = false;
             };
             _jumpCoroutine = StartCoroutine(DelayAction(_jumpDelayTime, null, endAction));
             Vector2 jumpAmount = Vector2.up * _jumpForce * _forceAmount * Time.fixedDeltaTime;
             _playerRb.velocity = jumpAmount;
-            _playerRb.gravityScale = 2.0f;
-            _playerCapsule.isTrigger = true;
+
+            //_playerCapsule.isTrigger = true;
         }
         if (!_isCrouch && _allowInput && (!_isLookUp || _isLookUp))
         {
             endInputAction();
+        }
+        // slope condiition.
+        if (_isAnyDirectionKeyNotPressed && _isSlope)
+        {
+            Debug.Log("OnSlope And Not Pressed");
+            _playerRb.gravityScale = 0.0f;
+            _playerRb.velocity = Vector2.zero;
+        }
+        else if (_isAnyDirectionKeyPressed && _isSlope)
+        {
+            Debug.Log("OnSlope and Pressed");
+            _playerRb.gravityScale = 0.0f;
+        }
+        else if (_isAnyDirectionKeyNotPressed && _isGround)
+        {
+            Debug.Log("OnGround and not pressed");
+            _playerRb.velocity = Vector2.zero;
+        }
+        else if (_isAnyDirectionKeyNotPressed)
+        {
+            Debug.Log("Not pressed");
+            _playerRb.gravityScale = _gravityScale;
         }
 
         if (onGroundMove && _isShoot && _isLookUp)
@@ -165,36 +197,41 @@ public class PlayerController : InputManager
     void FixedUpdate()
     {
         //fIX PLAYER CONTORLLER HERE.
-        if (_isAnyDirectionKeyPressed && !_isSlope && !_allowInput)
+        if (_allowInput) return;
+        //when the key presed and on the ground.
+        if (_isAnyDirectionKeyPressed && (_isGround && !_isSlope) || (!_isGround && !_isSlope))
         {
             Vector2 movePosition = new Vector2(_horizontal * _forceAmount * _movementSpeed, 0.0f);
-            _playerRb.isKinematic = false;
+            //_playerRb.isKinematic = false;
             //_playerRb.gravityScale = 2.0f;
             _playerRb.velocity = new Vector2(movePosition.x * Time.fixedDeltaTime, _playerRb.velocity.y);
         }
-        else if (_isAnyDirectionKeyPressed && _isSlope && !_allowInput)
+        // when the key has been pressed and on ground, on slope.
+        else if (_isAnyDirectionKeyPressed && _isGround && _isSlope)
         {
-            float inputX = _horizontal * _movementSpeed * Time.fixedDeltaTime;
-            Vector2 slopePosition = GetSlopePosition(Vector2.down,_bottomGroundDistnace, _groundLayerMask );
-            slopePosition.x = inputX + transform.localPosition.x;
-             Vector2 movePosition = new Vector2(slopePosition.x, slopePosition.y);
-             _playerRb.isKinematic = true;
-             //_playerRb.gravityScale = 2.0f;
-             transform.localPosition = movePosition;
-             Debug.Log(slopePosition);
-        // Vector2 slopeDirection = new Vector2(_horizontal * _forceAmount * _movementSpeed * -_slopePerpendicular.x, -_slopePerpendicular.y * _movementSpeed);
-        // Vector2 movePosition = new Vector2(slopeDirection.x * Time.fixedDeltaTime, _playerRb.velocity.y);
-        // _playerRb.velocity = movePosition;
+            float inputX = _horizontal * _movementSpeed * 1.1f * Time.fixedDeltaTime;
+            Vector2 slopePosition = GetSlopePosition(Vector2.down, _bottomGroundDistnace, _groundLayerMask);
+            Vector2 movePosition = new Vector2()
+            {
+                x = inputX + transform.localPosition.x,
+                y = slopePosition.y
+            };
+            //  _playerRb.MovePosition(movePosition);
+            _debugSlopeText.color = Color.green;
+            _debugSlopeText.text = "Slope: " + slopePosition + "\n" + "Player Pos" + transform.localPosition;
+            transform.localPosition = movePosition;
+            
+            // Vector2 slopeDirection = new Vector2(_horizontal * _forceAmount * _movementSpeed * -_slopePerpendicular.x, -_slopePerpendicular.y * _movementSpeed);
+            // Vector2 movePosition = new Vector2(slopeDirection.x * Time.fixedDeltaTime, _playerRb.velocity.y);
+            // _playerRb.velocity = movePosition;
         }
-        else if (_isAnyDirectionKeyNotPressed && _isSlope)
-        {
-            _playerRb.velocity = Vector2.zero;
-        }
+
+
 
         //Vector2 fullPosiition = _isLeftPressed ? new Vector2(0.34f, -1.0f) : new Vector2(-0.34f, -1.0f);
         //Vector2 topPosition = _isLeftPressed ? new Vector2(0.34f, 0.6f) : new Vector2(-0.34f, 0.6f);
         //Vector2 botPosition = _isLeftPressed ? new Vector2(0.35f, -0.3f) : new Vector2(-0.35f, -0.3f);
-//
+        //
         //SpriteHelper.ChangeSpritePosition(_playerFullAction.gameObject, _isLeftPressed, fullPosiition);
         //SpriteHelper.ChangeSpritePosition(_playerTopAction.gameObject, _isLeftPressed, topPosition);
         //SpriteHelper.ChangeSpritePosition(_playerBotAction.gameObject, _isLeftPressed, botPosition);
@@ -234,9 +271,10 @@ public class PlayerController : InputManager
     }
     private Vector3 GetSlopePosition(Vector2 direction, float distance, LayerMask layerMask)
     {
-        RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, direction , distance, layerMask);
+        RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, direction, distance, layerMask);
         Vector3 slopePlayerPosition = transform.localPosition;
-        if(hitInfo.collider != null){
+        if (hitInfo.collider != null)
+        {
             slopePlayerPosition.y = hitInfo.point.y;
             Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
         }
@@ -250,7 +288,7 @@ public class PlayerController : InputManager
             _slopePerpendicular = Vector2.Perpendicular(hitInfo.normal).normalized;
             float angle = Vector2.Angle(hitInfo.normal, direction);
             //Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.red);
-            Debug.DrawRay(hitInfo.point, _slopePerpendicular, Color.cyan);            
+            Debug.DrawRay(hitInfo.point, _slopePerpendicular, Color.cyan);
             return angle != 0 && angle < _slopeMax;
         }
         _slopePerpendicular = Vector2.zero;
@@ -261,10 +299,8 @@ public class PlayerController : InputManager
     {
         transform.DrawRaySphere(Vector2.up, _topHeadDistance, _topHeadRadius);
         transform.DrawRaySphere(Vector2.down, _bottomGroundDistnace, _bottomGroundRadius);
-        transform.DrawRayBox(Vector2.up, _topHeadBoxDistance, _topHeadBoxSize);
         transform.DrawRayBox(Vector2.right, _sideBoxDistance, _sideBoxSize);
         transform.DrawRayBox(Vector2.left, _sideBoxDistance, _sideBoxSize);
-        //transform.DrawyRayLine(Vector2.down, _playerHeight + _groundRay);
         transform.DrawCapsule(_playerHeight, 0.5f);
     }
 }
