@@ -7000,9 +7000,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   _enableVisual: 1
-  _sideBoxSize: {x: 0.2, y: 0.75}
+  _sideBoxSize: {x: 0.2, y: 0.87}
   _bottomGroundDistnace: 1.1
   _gravityScale: 2
+  _isLeftPressed: 0
+  _isRightPressed: 0
   _isGround: 0
   _isSlope: 0
 --- !u!1660057539 &9223372036854775807
