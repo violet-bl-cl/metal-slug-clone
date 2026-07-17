@@ -60,7 +60,7 @@ public class PlayerController : InputManager
     [SerializeField]
     private bool _isLeftPressed, _isRightPressed;
     [SerializeField] private bool _isGround, _isSlope;
-    private bool _isCrouch, _isLookUp;
+    private bool _isCrouch, _isLookUp, _isJumping;
     private bool _isShoot;
     private bool _isAnyDirectionKeyPressed, _isAnyDirectionKeyNotPressed;
     private float _horizontal;
@@ -81,18 +81,19 @@ public class PlayerController : InputManager
     }
     void Update()
     {
+        _isJumping = Input.GetKeyDown(JumpKey) && _isGround && _jumpCoroutine == null;
+        _isSlope = OnSlope(_bottomGroundDistnace, _groundLayerMask);
+        _isGround = transform.CheckCircleSide(Vector2.down, _bottomGroundRadius, _bottomGroundDistnace, _groundLayerMask);
         _horizontal = Input.GetAxis("Horizontal");
         _isLeftPressed = !transform.CheckBoxSide(Vector2.left, _sideBoxDistance, _sideBoxSize, _groundLayerMask) && Input.GetKey(MoveLeft);
         _isRightPressed = !transform.CheckBoxSide(Vector2.right, _sideBoxDistance, _sideBoxSize, _groundLayerMask) && Input.GetKey(MoveRight);
-        _isGround = transform.CheckCircleSide(Vector2.down, _bottomGroundRadius, _bottomGroundDistnace, _groundLayerMask);
-        _isSlope = OnSlope( _bottomGroundDistnace, _groundLayerMask);
         _isCrouch = Input.GetKey(MoveDown);
         _isLookUp = Input.GetKey(MoveUp);
-        _isAnyDirectionKeyNotPressed = Input.GetKeyUp(MoveLeft) || Input.GetKeyUp(MoveRight);
-        _isAnyDirectionKeyPressed = _isLeftPressed || _isRightPressed;
-        _movementSpeed = (_isCrouch && _isGround) ? _crouchSpeed : _walkSpeed;
+        //add new jump logic here
 
-        _playerRb.isKinematic = _isSlope;
+        _isAnyDirectionKeyPressed = _isLeftPressed || _isRightPressed;
+        _isAnyDirectionKeyNotPressed = !Input.GetKey(MoveLeft) && !Input.GetKey(MoveRight);
+        _movementSpeed = (_isCrouch && _isGround) ? _crouchSpeed : _walkSpeed;
         bool onGroundMove = _isAnyDirectionKeyPressed && _isGround && !_isCrouch;
         bool offGroundMove = _isAnyDirectionKeyPressed && !_isGround && !_isCrouch;
         bool offGroundLookDown = _isAnyDirectionKeyPressed && !_isGround && _isCrouch;
@@ -110,24 +111,26 @@ public class PlayerController : InputManager
             _inputCoroutine = null;
             _allowInput = false;
         };
-        if (Input.GetKeyDown(JumpKey) && _isGround && _jumpCoroutine == null)
+        if (_isJumping)
         {
+            Debug.Log("Jump" + _isJumping + "X" + _playerRb.velocity.x + "y" + _jumpForce * 10);
             Action endAction = () =>
             {
                 StopCoroutine(_jumpCoroutine);
                 _jumpCoroutine = null;
             };
             _jumpCoroutine = StartCoroutine(DelayAction(_jumpDelayTime, null, endAction));
-            Vector2 jumpAmount = Vector2.up * _jumpForce * _forceAmount * Time.fixedDeltaTime;
-            _playerRb.velocity = jumpAmount;
+            _playerRb.velocity = new Vector2(_playerRb.velocity.x, _jumpForce * 10);
         }
         if (!_isCrouch && _allowInput && (!_isLookUp || _isLookUp))
         {
             endInputAction();
         }
 
+        bool isJumpingUp = _playerRb.velocity.y > 0.1f;
+
         // Gravity conditions
-        if (_isAnyDirectionKeyNotPressed && _isSlope)
+        if (_isAnyDirectionKeyNotPressed && _isSlope && !isJumpingUp)
         {
             Debug.Log("OnSlope And Not Pressed");
             //UseGravity(false);
@@ -138,7 +141,7 @@ public class PlayerController : InputManager
             Debug.Log("OnSlope and Pressed");
            // UseGravity(true);
         }
-        else if (_isAnyDirectionKeyNotPressed && _isGround)
+        else if (_isAnyDirectionKeyNotPressed && _isGround && !isJumpingUp)
         {
             Debug.Log("OnGround and not pressed");
             _playerRb.velocity = Vector2.zero;
@@ -189,25 +192,26 @@ public class PlayerController : InputManager
             if (_inputCoroutine == null) _inputCoroutine = StartCoroutine(DelayAction(_inputDelayTime, startInputAction, endInputAction));
             Shoot(_direction);
         }
-    }
 
-    void FixedUpdate()
-    {
-        if (_allowInput) return;
+         if (_allowInput) return;
         //if the player is not on the ground or on the ground.
-        float inputX = _horizontal * _movementSpeed * _forceAmount * Time.fixedDeltaTime;
+        float inputX = _horizontal * _movementSpeed * _forceAmount * Time.deltaTime;
+        bool isJumping = _playerRb.velocity.y > 0.1f;
         if (_isAnyDirectionKeyPressed && _isGround && !_isSlope)
         {
             Debug.Log("Moving!");
-            Vector2 movePosition = new Vector2(inputX,0.0f);
+            Vector2 movePosition = new Vector2(inputX, isJumping ? _playerRb.velocity.y : 0.0f);
             _playerRb.velocity = movePosition;
-
         }
         // when the key has been pressed and on ground, on slope.
         else if (_isAnyDirectionKeyPressed && _isGround && _isSlope)
         {
             Vector2 slopePosition = new Vector2();
             slopePosition.Set(_slopePerpendicular.x * -inputX, _slopePerpendicular.y * -inputX);
+            if (isJumping)
+            {
+                slopePosition.y = _playerRb.velocity.y;
+            }
             _debugSlopeText.color = Color.green;
             _debugSlopeText.text = "Slope: " + slopePosition + "\n" + "Player Pos" + transform.localPosition;
             _playerRb.velocity = slopePosition;
