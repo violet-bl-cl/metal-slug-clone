@@ -7,7 +7,7 @@ public class ObjectPool : MonoBehaviour
     public static ObjectPool Instance;
     public int NumOfObjects;
     public GameObject ObjectToPool;
-    private List<GameObject> _poolObjects;
+    private List<GameObject> _poolObjects = new List<GameObject>();
     void Awake()
     {
         if (Instance == null)
