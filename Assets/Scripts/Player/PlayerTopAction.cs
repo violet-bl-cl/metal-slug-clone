@@ -11,7 +11,7 @@ public class PlayerTopAction : MonoBehaviour
         _playerAnimator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
-    void Update()
+    void LateUpdate()
     {
         switch (Action)
         {

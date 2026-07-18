@@ -20,7 +20,7 @@ public class PlayerBottomAction : MonoBehaviour
     private void OnDsiable(){
 
     }
-    void UpdatePlayerAnimation()
+    void LateUpdate()
     {
         switch (Action)
         {

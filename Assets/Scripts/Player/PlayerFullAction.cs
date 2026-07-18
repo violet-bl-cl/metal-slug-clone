@@ -13,7 +13,7 @@ public class PlayerFullAction : MonoBehaviour
         _playerAnimator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
-    void FixedUpdate()
+    void LateUpdate()
     {
         switch (Action)
         {
